@@ -31,16 +31,16 @@ if __name__ == '__main__':
     # items = [((1, 2), 0), ((6, 1), 0), ((2, 6), 0), ((5, 7), 0), ((1, 12), 0), ((5, 13), 0)]
     # human, agent = (1, 9), (3, 9)
 
-    sample_world = itempick.ItemPickWorldItem(size, items, human, agent)
+    # sample_world = itempick.ItemPickWorldItem(size, items, human, agent)
     # sample_world = itempick.ItemPickWorldItem(size, items, human, agent, False)
-    # sample_world = itempick.ItemPickWorldMove(size, items, human, agent)
+    sample_world = itempick.ItemPickWorldMove(size, items, human, agent)
 
     # print sample_world.p_assign__reward
     # print sample_world.r_assign_reward
-    print sample_world.p_item__reward
+    # print sample_world.p_item__reward
 
     # print sample_world._p_item__move(1)
-    # print sample_world.p_r__a2()
+    print sample_world.p_r__a()
     # solver = Collaboration()
     # print sample_world.p_r__a2()
 

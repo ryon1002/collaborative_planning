@@ -13,6 +13,7 @@ class ItemPickWorld(object):
         self.map = np.zeros(size)
 
         self.items = [i[0] for i in items]
+        self.np_items = np.array([i[0] for i in items])
         self.human = np.array([human])
         self.agent = np.array([agent])
         self.dists = squareform(pdist(np.array(self.items + list(self.human) + list(self.agent)),
@@ -90,21 +91,24 @@ class ItemPickWorldItem(ItemPickWorld):
 class ItemPickWorldMove(ItemPickWorld):
     def __init__(self, size, items, human, agent, reward=True):
         super(ItemPickWorldMove, self).__init__(size, items, human, agent, reward)
-        self.action_type = actiontype.MoveAction()
+        # self._p_ = None
+        self.move_action = actiontype.MoveAction()
 
-    def _p_move__item(self, item, beta=1):
-        pos = self.agent + self.action_type.actions
-        q = -np.sum(np.abs(pos - np.array(self.items[item])), axis=1)
-        return probutil.make_prob_dist(q, beta)
+    def _p_move__item(self, pos, beta):
+        pos = pos + self.move_action.actions
+        reward = np.array([-self._dist_from_items(p) for p in pos])
+        return probutil.make_prob_2d_dist(reward, 0, beta)
 
-    def _p_item__move(self, beta=1):
-        p_move__item = np.array([self._p_move__item(i, beta) for i in range(len(self.items))])
-        return probutil.normalized_2d_array(p_move__item, 0)
+    def _dist_from_items(self, pos):
+        return np.sum(np.abs(pos - self.np_items), axis=1)
 
-    def p_r__a2(self, beta=1):  # P(r | a)
-        p_item__move = self._p_item__move(beta)
-        p_assign__r = probutil.make_prob_2d_dist(self.r_assign_reward, 0, beta)  # P(r | As)
-        p_a__r = np.array([np.sum(p_assign__r[self.assign_action.get_action_seq_index(c)], axis=0)
-                           for c in self.assign_action.get_all_condition(1)])
-        p_r__item = probutil.normalized_2d_array(p_a__r, 1)
-        return np.dot(p_item__move.T, p_r__item)
+    def p_r__a(self, beta=1):  # P(r | a)
+        p_move__item = self._p_move__item(self.agent, beta)
+        prob = np.dot(p_move__item, self.p_item__reward)
+        return probutil.normalized_2d_array(prob, 1)
+
+    def p_r__a_s(self, s, beta=1):  # P(r | a)
+        p_move__item = self._p_move__item(s, beta)
+        prob = np.dot(p_move__item, self.p_item__reward)
+        return probutil.normalized_2d_array(prob, 1)
+
