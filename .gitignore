@@ -1,0 +1,8 @@
+*.pyc
+.project
+.pydevproject
+org.eclipse.*
+solver/ext/*.exe
+.idea/*
+.idea
+vcs.xml
