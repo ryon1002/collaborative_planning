@@ -48,7 +48,7 @@ class GraphWorld(object):
         # exit()
         # print self.p_p__a[action]
         # return top_down, self.calc_bottom_up2(action, self.p_p__a)
-        # return top_down, self.calc_bottom_up2(action, self.p_p__a), self.calc_bottom_up(action, self.p_p__a2)
+        return top_down, self.calc_bottom_up2(action, self.p_p__a), self.calc_bottom_up(action, self.p_p__a2)
         # print self.calc_bottom_up(action, self.p_p__a2)
         action_len = self._calc_path_weight(action)
         c_min_distance = []
@@ -77,7 +77,7 @@ class GraphWorld(object):
             # make_answer.make_answer(goal, "check/answer_" + str(id) + ".jpg")
             # id += 1
             # pass
-        exit()
+        # exit()
 
     def calc_top_down(self, action):
         prob = []
@@ -235,7 +235,7 @@ if __name__ == '__main__':
     import pickle
 
     # world = pickle.load(open("sample_world.pkl", "r"))
-    world = pickle.load(open("dump/sample_world_5.pkl", "r"))
+    # world = pickle.load(open("dump/sample_world_5.pkl", "r"))
     world.show_world()
 
     # g_world = GraphWorld(world)

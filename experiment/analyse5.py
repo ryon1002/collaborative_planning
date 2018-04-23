@@ -1,7 +1,7 @@
 import json
 import itertools
 import pickle
-import graph_world2
+from world import graph_world2
 import numpy as np
 import scipy.stats
 import matplotlib.pyplot as plt
@@ -12,7 +12,7 @@ matplotlib.use('Agg')
 # user_prof = {l.split("\t")[0]:l.split("\t")[1] for l in open("analize/result2.txt", "r")}
 
 np.set_printoptions(edgeitems=3200, linewidth=10000, precision=3)
-user_data = {l.split("\t")[0]:json.loads(l.split("\t")[1]) for l in open("analize/result.txt", "r")}
+user_data = {l.split("\t")[0]:json.loads(l.split("\t")[1]) for l in open("result/result.txt", "r")}
 
 answer_index = {1: [0, 1, 2, 3],
                 2: [0, 1, 2, 3],
@@ -26,49 +26,6 @@ answer_index = {1: [0, 1, 2, 3],
                 10: [0, 1, 2, 3],
                 }
 
-top = np.zeros((10, 4))
-bottom = np.zeros((10, 4))
-bottom2 = np.zeros((10, 4))
-
-# for eval_id in range(1, 11):
-for eval_id in range(1, 11):
-# for eval_id in [5]:
-#     for beta in range(10):
-#     for beta in [5]:
-    for beta in [4]:
-#     for beta in [5]:
-        world = pickle.load(open("dump/sample_world_" + str(eval_id) + ".pkl", "r"))
-        wb= graph_world2.GraphWorld(world, 0.5, 0.5)
-        _, b, _ = wb.check_action(wb.base_action)
-        # wti graph_world2.GraphWorld(world, 0.5)
-        # world.show_world([], True)
-        # exit()
-        # wt= graph_world2.GraphWorld(world, beta*0.1)
-        # wb= graph_world2.GraphWorld(world, beta*0.1)
-        # wt= graph_world2.GraphWorld(world, 0.4)
-        # wb= graph_world2.GraphWorld(world, 0.4, 0.7)
-        # wb2= graph_world2.GraphWorld(world, 0.5)
-        wt= graph_world2.GraphWorld(world, 0.5)
-        wb= graph_world2.GraphWorld(world, 0.5, 0.5)
-        wb2= graph_world2.GraphWorld(world, 0.5)
-        # t, _ = wt.check_action(wt.base_action)
-        t, _, _ = wt.check_action(wt.base_action)
-        _, b, _ = wb.check_action(wb.base_action)
-        _, _, b2 = wt.check_action(wt.base_action)
-        top[eval_id - 1] = t[answer_index[eval_id]]
-        bottom[eval_id - 1] = b[answer_index[eval_id]]
-        bottom2[eval_id - 1] = b2[answer_index[eval_id]]
-        # print top[eval_id - 1]
-        # print bottom[eval_id - 1]
-    # print
-top = top / np.sum(top , axis=1, keepdims=True)
-bottom = bottom / np.sum(bottom , axis=1, keepdims=True)
-bottom2 = bottom2 / np.sum(bottom2 , axis=1, keepdims=True)
-
-print top
-print bottom
-print bottom2
-# exit()
 answer_type = {1: np.array([1, 2, 0, 0]),
                2: np.array([1, 3, 2, 3]),
                3: np.array([0, 1, 2, 0]),
@@ -141,11 +98,63 @@ def conv_to_prob3(data):
     return {k:prob1(v, min(d_list)) for k, v in data.viewitems() if not is_wrong_answer(k, v)}
 
 prob_data = [{k:v[1] for k, v in u.viewitems()} for u in format_data]
-human = np.zeros((10, 4))
-for d in prob_data:
+human = np.zeros((len(prob_data), 10, 4))
+for i, d in enumerate(prob_data):
     for k, v in d.viewitems():
-        human[k - 1] += v
-human = human / len(prob_data)
+        human[i][k - 1] = v
+
+
+# top = np.zeros((11, 10, 4))
+bottom = np.zeros((11, 10, 4))
+# bottom2 = np.zeros((11, 10, 4))
+for beta in range(0, 11):
+    for eval_id in range(1, 11):
+        world = pickle.load(open("dump/sample_world_" + str(eval_id) + ".pkl", "r"))
+        wb= graph_world2.GraphWorld(world, 0.4, 0.1 * beta)
+        _, b, _ = wb.check_action(wb.base_action)
+        bottom[beta, eval_id - 1] = b[answer_index[eval_id]]
+    bottom[beta] = bottom[beta] / np.sum(bottom[beta] , axis=1, keepdims=True)
+
+print bottom
+# for h in human:
+#     values = []
+#     for beta in range(0, 11):
+#         values.append(scipy.stats.pearsonr(h.flatten(), bottom[beta].flatten())[0])
+#     print np.argmax(np.array(values))
+
+
+task_bb = []
+task_b = []
+task_t = []
+for h in human:
+    values = []
+    for beta in range(0, 11):
+        values.append(scipy.stats.pearsonr(h.flatten(), bottom[beta].flatten())[0])
+    task_bb.append(np.max(np.array(values)))
+    task_t.append(values[0])
+    task_b.append(values[7])
+print sum(task_bb) / len(human)
+print sum(task_b) / len(human)
+print sum(task_t) / len(human)
+# exit()
+
+for h in human:
+    task = []
+    for eval_id in range(1, 11):
+        values = []
+        for beta in range(0, 11):
+            values.append(scipy.stats.pearsonr(h[eval_id - 1].flatten(), bottom[beta][eval_id - 1].flatten())[0])
+        task.append(np.argmax(np.array(values)) * 0.01)
+    print task
+    # print np.std(task)
+exit()
+
+# print top
+# print bottom
+# print bottom2
+# # exit()
+# print human
+exit()
 
 # prob_data = [conv_to_prob(u) for u in format_data]
 # prob_data = [conv_to_prob2(u) for u in format_data]
@@ -234,20 +243,20 @@ print scipy.stats.pearsonr(bottom2_p, i_index)[0]
 #             c_bottom_p[k - 1] += 1
 # top_p /= c_top_p
 # bottom_p /= c_bottom_p
+
 ##################### Each ######################
-# print top_p, bottom_p, label
+print top_p, bottom_p, label
 index = np.arange(9)
-plt.bar(index-0.2, top_p, color="b", width=0.4, label="Full Inverse Planning")
-plt.bar(index+0.2, bottom_p, color="g", width=0.4, label="Plan Predictability Oriented")
-# # plt.bar(index-0.3, top_p, color="b", width=0.3, label="Full Bayes")
-# # plt.bar(index, bottom_p, color="g", width=0.3, label="Plan Prediction Oriented")
-# # plt.bar(index+0.3, bottom2_p, color="r", width=0.3, label="Plan Prediction Oriented")
-plt.xticks(index, label)
+# plt.bar(index-0.2, top_p, color="b", width=0.4, label="Full Bayes")
+# plt.bar(index+0.2, bottom_p, color="g", width=0.4, label="Plan Prediction Oriented")
+plt.bar(index-0.3, top_p, color="b", width=0.3, label="Full Bayes")
+plt.bar(index, bottom_p, color="g", width=0.3, label="Plan Prediction Oriented")
+plt.bar(index+0.3, bottom2_p, color="r", width=0.3, label="Plan Prediction Oriented")
 plt.tick_params(axis='both', which='major', labelsize=12)
-plt.xlabel("(k,n,c)", fontsize=16)
-plt.ylabel("Pearson Correlation", fontsize=16)
-# plt.legend(loc="upper right", fontsize=12)
-plt.legend(loc="lower right", bbox_to_anchor=(1.015, 1), fontsize=12)
+plt.xticks(index, label)
+plt.xlabel("k-n-c")
+plt.ylabel("Pearson Correlation")
+plt.legend(loc="lower right")
 plt.savefig("result_1.eps", bbox_inches="tight", format="eps")
 plt.show()
 exit()
@@ -277,10 +286,9 @@ print b
 print len(t)
 baseline = np.arange(-0.2, 1.2, 0.1)
 plt.scatter(t, b)
-plt.tick_params(axis='both', which='major', labelsize=12)
-plt.ylabel("Plan Predictability Oriented", fontsize=16)
-plt.xlabel("Full Inverse Planning", fontsize=16)
 plt.plot(baseline, baseline, "--", linewidth=0.5, color="k")
+plt.ylabel("Plan Prediction Oriented")
+plt.xlabel("Full Bayes")
 plt.savefig("result_2.eps", bbox_inches="tight", format="eps")
 plt.show()
 exit()
@@ -344,4 +352,4 @@ print bottom_list
 # plt.show()
 # plt.hist(bottom_list)
 # plt.show()
-exit()
+# exit()

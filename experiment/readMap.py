@@ -2,7 +2,7 @@
 import openpyxl
 import itertools
 
-import ItemPickWorld
+from world import ItemPickWorld
 
 x_list = [chr(i) for i in range(65, 65 + 26)] + ["A" + chr(i) for i in range(65, 65 + 6)]
 x_list = [(n, i) for n, i in enumerate(x_list)]
@@ -23,7 +23,7 @@ wb = openpyxl.load_workbook("stimulus.xlsx", read_only=True)
 # ws, eval_id = wb["data_3_2_3"], 8
 # ws, eval_id = wb["data_4_3_3"], 9
 # ws, eval_id = wb["data_2_1_2__"], 10
-# ws, eval_id = wb["training"], 201
+ws, eval_id = wb["training"], 201
 items = []
 path = []
 path_que = []
@@ -35,7 +35,6 @@ for (y, y_str), (x, x_str) in itertools.product(y_list, x_list):
             agent = (y, x)
             path.append((y, x))
         else:
-            # print y, x, cell.value, cell.font.color.index
             items.append(((y, x), (types[cell.value], colors[cell.font.color.index])))
     if cell.fill is not None:
         if cell.fill.bgColor.index == 64:
@@ -76,7 +75,7 @@ world.eval_id = eval_id
 
 import pickle
 # pickle.dump(world, open("dump/sample_world_" + str(eval_id) + ".pkl", "w"))
-pickle.dump(world, open("../experiment/dump/sample_world_" + str(eval_id) + ".pkl", "w"))
+pickle.dump(world, open("dump/sample_world_" + str(eval_id) + ".pkl", "w"))
 
 exit()
 
